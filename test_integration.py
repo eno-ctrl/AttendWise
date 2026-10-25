@@ -7,41 +7,12 @@ Tests integration between:
 3. main.py (Dashboard aggregation, edge case guidance, and validation)
 
 Run this test suite using:
-    pytest test_integration.py -v
-or
-    python test_integration.py
+    python -m pytest test_integration.py -v
 """
 
-import os
 import math
-import tempfile
-import pathlib
-import contextlib
-import importlib
 
-# Dynamic import of pytest for maximum environment flexibility
-try:
-    pytest = importlib.import_module("pytest")
-    fixture_decorator = pytest.fixture
-except ImportError:
-    class _PytestShim:
-        @staticmethod
-        def fixture(func):
-            return func
-
-        @staticmethod
-        @contextlib.contextmanager
-        def raises(expected_exception, match=None):
-            try:
-                yield
-            except expected_exception as exc:
-                if match and match not in str(exc):
-                    raise AssertionError(f"Pattern '{match}' not found in exception message: '{exc}'")
-            else:
-                raise AssertionError(f"Expected exception {expected_exception.__name__} was not raised.")
-
-    pytest = _PytestShim()
-    fixture_decorator = pytest.fixture
+import pytest
 
 from calculator import (
     calculate_percentage,
@@ -61,16 +32,10 @@ from database import (
 )
 
 
-@fixture_decorator
-def app_db(tmp_path=None):
+@pytest.fixture
+def app_db(tmp_path):
     """Creates a temporary isolated SQLite database file."""
-    if tmp_path is not None:
-        db_file = pathlib.Path(tmp_path) / "test_integration.db"
-        path_str = str(db_file)
-    else:
-        temp_dir = tempfile.mkdtemp()
-        path_str = os.path.join(temp_dir, "test_integration.db")
-
+    path_str = str(tmp_path / "test_integration.db")
     init_db(path_str)
     return path_str
 
@@ -205,41 +170,3 @@ def test_data_persists_across_app_restarts(app_db):
     assert len(subjects) == 1
     assert subjects[0]["id"] == sub_id
     assert subjects[0]["name"] == "Machine Learning"
-
-
-# =====================================================================
-# Standalone Runner
-# =====================================================================
-
-if __name__ == "__main__":
-    print("=" * 60)
-    print("Running AttendWise Integration Test Suite...")
-    print("=" * 60)
-
-    test_functions = [
-        func for name, func in globals().items()
-        if callable(func) and name.startswith("test_")
-    ]
-
-    passed = 0
-    failed = 0
-    for test_fn in test_functions:
-        temp_dir = tempfile.TemporaryDirectory()
-        db_path = os.path.join(temp_dir.name, "attendwise_integration_test.db")
-        init_db(db_path)
-        try:
-            test_fn(db_path)
-            print(f"  [PASS] {test_fn.__name__}")
-            passed += 1
-        except Exception as e:
-            print(f"  [FAIL] {test_fn.__name__}: {e}")
-            failed += 1
-        finally:
-            temp_dir.cleanup()
-
-    print("-" * 60)
-    if failed == 0:
-        print(f"SUCCESS: All {passed} integration tests passed successfully!")
-    else:
-        print(f"FAILURE: {failed} test(s) failed, {passed} passed.")
-    print("=" * 60)

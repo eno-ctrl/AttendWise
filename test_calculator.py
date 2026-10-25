@@ -8,27 +8,8 @@ or
 """
 
 import math
-import contextlib
-import importlib
 
-# Resolve pytest dynamically to avoid editor missing-import warnings if pytest isn't installed yet
-try:
-    pytest = importlib.import_module("pytest")
-except ImportError:
-    class _PytestShim:
-        """Lightweight pytest.raises fallback when pytest is not installed locally."""
-        @staticmethod
-        @contextlib.contextmanager
-        def raises(expected_exception, match=None):
-            try:
-                yield
-            except expected_exception as exc:
-                if match and match not in str(exc):
-                    raise AssertionError(f"Pattern '{match}' not found in exception message: '{exc}'")
-            else:
-                raise AssertionError(f"Expected exception {expected_exception.__name__} was not raised.")
-
-    pytest = _PytestShim()
+import pytest
 
 from calculator import (
     calculate_percentage,
@@ -264,38 +245,3 @@ def test_display_rounding():
     assert calculate_percentage(1, 3) == 33.33
     assert calculate_percentage(2, 3) == 66.67
     assert calculate_percentage(1, 3, round_digits=1) == 33.3
-
-
-# =====================================================================
-# Standalone Runner (Allows running with: python test_calculator.py)
-# =====================================================================
-
-if __name__ == "__main__":
-    print("=" * 60)
-    print("Running AttendWise Calculator Test Suite...")
-    print("=" * 60)
-
-    # Collect all test functions defined in this module
-    test_functions = [
-        func for name, func in globals().items()
-        if callable(func) and name.startswith("test_")
-    ]
-
-    passed = 0
-    failed = 0
-    for test_fn in test_functions:
-        try:
-            test_fn()
-            print(f"  [PASS] {test_fn.__name__}")
-            passed += 1
-        except Exception as e:
-            print(f"  [FAIL] {test_fn.__name__}: {e}")
-            failed += 1
-
-    print("-" * 60)
-    if failed == 0:
-        print(f"SUCCESS: All {passed} tests passed successfully!")
-    else:
-        print(f"FAILURE: {failed} test(s) failed, {passed} passed.")
-    print("=" * 60)
-

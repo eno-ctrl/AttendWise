@@ -32,7 +32,6 @@ from database import (
     init_db,
     add_subject,
     get_all_subjects,
-    get_subject_by_id,
     update_subject,
     record_class_status,
     delete_subject,

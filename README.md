@@ -50,8 +50,9 @@ records remain on their own machine.
 
 ## Run tests
 
-Install pytest if it is not already available, then run:
+Install the development dependencies, then run:
 
 ```powershell
+python -m pip install -r requirements-dev.txt
 python -m pytest -q
 ```
