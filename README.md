@@ -47,12 +47,3 @@ interpreter and press **F5** to run the **Run AttendWise** launch profile.
 The app creates `attendwise.db` in its working directory to store data. That
 local database is intentionally excluded from Git; each user's attendance
 records remain on their own machine.
-
-## Run tests
-
-Install the development dependencies, then run:
-
-```powershell
-python -m pip install -r requirements-dev.txt
-python -m pytest -q
-```
